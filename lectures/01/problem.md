@@ -57,6 +57,13 @@ uv run python -m app.ask "AIE2026の講座で使う「lecNN-start タグ」と�
 uv run python -m app.ask "AIE2026の第2回では何を学びますか？"
 ```
 
+対話を続けるには `--interactive` を指定します。同じチャットの会話履歴を使うため、
+「それをもう少し詳しく」のような質問もできます。`終了` または Ctrl-D で終了します。
+
+```bash
+uv run python -m app.ask --interactive
+```
+
 ### 6. Copilot でトークン数を表示させる
 
 `app/ask.py` の `TODO(第1回 演習)` の場所で、入力トークン数と出力トークン数を表示するよう改修します。Copilot の補完やチャットを使ってかまいません。提案されたコードは、読んで理解してから採用してください。
@@ -85,10 +92,18 @@ GitHub の自分の fork で、`lec01` → `main` の PR を作成します。**
 | 実装 | `app/ask.py` を改修し、会話履歴を保ったまま続けて質問できるようにする |
 | 発展 | 応答時間とトークン数を計測し、複数のモデルや質問で比較する。無料枠のレート制限との関係も考察する |
 
-モデルの切り替え例：
+基礎の実行例（同じ質問を温度だけ変えて3回実行）：
+
+```bash
+uv run python -m app.ask --temperature 0.0 "LoRAとは何ですか？"
+uv run python -m app.ask --temperature 0.7 "LoRAとは何ですか？"
+uv run python -m app.ask --temperature 1.4 "LoRAとは何ですか？"
+```
+
+モデルを変えて比べる場合は、次のように `AIE_MODEL` を指定します。
 
 ```bash
 AIE_MODEL=gemini-3.5-flash uv run python -m app.ask "LoRAとは何ですか？"
 ```
 
-temperature を変えるには、`generate_content` の `config` 引数を調べてみましょう。
+temperature は `--temperature` で指定できます（0.0〜2.0）。
