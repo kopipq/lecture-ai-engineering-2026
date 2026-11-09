@@ -46,3 +46,16 @@ def test_default_question_of_lecture1_is_answerable_from_glossary():
     assert "3レベル" in DEFAULT_QUESTION
     hits = json.loads(tools.search_glossary("3レベル"))
     assert hits[0]["term"] == "宿題の3レベル"
+
+
+def test_make_quiz_picks_a_term_of_the_lecture():
+    lecture2 = {t["term"]: t["definition"] for t in tools.load_glossary() if t["lecture"] == 2}
+    quiz = json.loads(tools.make_quiz(2))
+    assert quiz["lecture"] == 2
+    assert quiz["term"] in lecture2
+    assert quiz["term"] in quiz["question"]
+    assert quiz["answer"] == lecture2[quiz["term"]]
+
+
+def test_make_quiz_reports_lecture_without_terms():
+    assert "ありません" in tools.make_quiz(99)
