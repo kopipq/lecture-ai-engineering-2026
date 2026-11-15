@@ -5,11 +5,17 @@
 """
 
 import json
+import random
+from datetime import datetime
 from functools import cache
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 MAX_RESULTS = 3
+
+# 宿題（実装）: 学習の記録の保存先。個人のメモなので .gitignore で共有しない
+LEARNING_LOG_DIR = Path(__file__).resolve().parent.parent / "learning_log"
+MAX_LOG_CHARS = 10_000
 
 
 @cache
@@ -77,3 +83,54 @@ def get_lecture_summary(lecture: int) -> str:
         available = sorted(p.stem for p in (DATA_DIR / "lectures").glob("*.md"))
         return f"第{lecture}回の要点はまだありません。用意されている回: {', '.join(available)}"
     return path.read_text(encoding="utf-8")
+
+
+def make_quiz(lecture: int) -> str:
+    """指定した回（1始まりの整数）の用語から確認問題を1問作り、問題と答えを返す。
+
+    「第2回の内容から確認問題を出して」のように、復習用の問題を求められたときに使う。
+    答え（answer）は、利用者が自分で考えたあとに示すこと。
+    """
+    terms = [e for e in load_glossary() if e["lecture"] == lecture]
+    if not terms:
+        return f"第{lecture}回の用語は用語集にありません。別の回を指定してください。"
+    entry = random.choice(terms)
+    return json.dumps(
+        {
+            "lecture": lecture,
+            "term": entry["term"],
+            "question": f"「{entry['term']}」とはどういう意味ですか？",
+            "answer": entry["definition"],
+        },
+        ensure_ascii=False,
+    )
+
+
+def save_learning_log(title: str, content: str) -> str:
+    """学習の記録を learning_log/ フォルダに Markdown ファイルとして保存する。
+
+    利用者が「今日の学びを記録して」「このやりとりをメモに残して」のように、
+    記録の保存をはっきり頼んだときだけ使う。title には記録の短い見出しを、
+    content には保存する本文を入れる。ファイルを書き込むので、実行の前に利用者の確認が入る。
+    """
+    # ファイル名はモデルに決めさせず日時から作る（learning_log/ の外へ書かせないため）
+    heading = " ".join(title.split()) or "学習の記録"
+    body = content.strip()
+    if not body:
+        return "保存する本文が空です。記録したい内容を content に入れてください。"
+    if len(body) > MAX_LOG_CHARS:
+        return f"本文が長すぎます（{len(body)} 文字）。{MAX_LOG_CHARS} 文字以内にまとめてください。"
+
+    now = datetime.now()
+    LEARNING_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    text = f"# {heading}\n\n記録日時: {now:%Y-%m-%d %H:%M}\n\n{body}\n"
+    for n in range(1, 100):
+        suffix = "" if n == 1 else f"-{n}"
+        path = LEARNING_LOG_DIR / f"{now:%Y%m%d-%H%M%S}{suffix}.md"
+        try:
+            with open(path, "x", encoding="utf-8") as f:  # "x": 既にあれば上書きせず失敗する
+                f.write(text)
+        except FileExistsError:
+            continue
+        return f"learning_log/{path.name} に保存しました。"
+    return "同じ時刻の記録が多すぎて保存できませんでした。少し待ってから保存してください。"
