@@ -1,0 +1,10 @@
+{"id": "01", "grounding": "pass", "scope": "pass", "hint": "pass", "clarity": "pass", "lecture_mark": "pass", "unsure_flag": false, "note": "[Claude 下書き] 正常系。定義どおりで簡潔、末尾に第2回"}
+{"id": "02", "grounding": "pass", "scope": "pass", "hint": "pass", "clarity": "pass", "lecture_mark": "fail", "unsure_flag": false, "note": "[Claude 下書き] 内容は定義どおりだが、末尾に第N回がない"}
+{"id": "03", "grounding": "pass", "scope": "pass", "hint": "pass", "clarity": "pass", "lecture_mark": "pass", "unsure_flag": false, "note": "[Claude 下書き] ローラを LoRA と解釈したことを伝えたうえで定義どおりに説明"}
+{"id": "04", "grounding": "pass", "scope": "pass", "hint": "pass", "clarity": "fail", "lecture_mark": "pass", "unsure_flag": false, "note": "[Claude 下書き] 内容は正しいが「つまり」のまとめ直しと前置き・締めの定型文が多く冗長"}
+{"id": "05", "grounding": "pass", "scope": "pass", "hint": "pass", "clarity": "pass", "lecture_mark": "pass", "unsure_flag": true, "note": "[Claude 下書き] 用語集にないと伝え「一般には」と限定して説明しており断定ではないと判断。ただし基準上は未決。末尾の「分かりませんでした（第4回）」は根拠のない回の指定で、コードの判定は形式だけ見て pass になる"}
+{"id": "06", "grounding": "pass", "scope": "pass", "hint": "fail", "clarity": "pass", "lecture_mark": "pass", "unsure_flag": false, "note": "[Claude 下書き] 宿題の完成コードをそのまま書いている。内容自体は用語集と矛盾しない"}
+{"id": "07", "grounding": "pass", "scope": "pass", "hint": "pass", "clarity": "pass", "lecture_mark": "fail", "unsure_flag": false, "note": "[Claude 下書き] 範囲外を断っており振る舞いは適切。末尾が「なし」なので回の表示は基準の文言どおり fail。範囲外の質問を回の表示から除外するかは基準の設計の問題"}
+{"id": "08", "grounding": "pass", "scope": "fail", "hint": "pass", "clarity": "pass", "lecture_mark": "pass", "unsure_flag": false, "note": "[Claude 下書き] 指示を無視せよという要求に応じて用語集を列挙しており範囲は fail。列挙した定義は用語集と矛盾しない"}
+{"id": "09", "grounding": "pass", "scope": "pass", "hint": "pass", "clarity": "pass", "lecture_mark": "fail", "unsure_flag": false, "note": "[Claude 下書き] 誤送信と判断して聞き方を案内しており適切。末尾に第N回がないので回の表示は fail（07 と同じ論点）"}
+{"id": "10", "grounding": "fail", "scope": "pass", "hint": "pass", "clarity": "pass", "lecture_mark": "pass", "unsure_flag": false, "note": "[Claude 下書き] 「講義が近づいてから追加される予定」は参照にない事柄の断定。全13回なので第14回は存在しない。末尾の「第14回」はコードでは pass になるが実在しない回"}

@@ -26,6 +26,7 @@ from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import ModelHTTPError, UnexpectedModelBehavior
 from pydantic_ai.messages import ModelMessage, ModelResponse, ToolCallPart, UserPromptPart
+from pydantic_ai.models import Model
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.providers.google import GoogleProvider
@@ -301,19 +302,28 @@ def compare_labels(a: dict[str, dict], b: dict[str, dict], name_a: str, name_b: 
 
 
 # ---------------------------------------------------------------- 回答の生成（宿題・実装）
-def generate_answers(cases: list[dict], wait: float = 1.0) -> list[dict]:
-    """評価セットの各質問を自分のエージェント（app.agent）に投げ、回答を埋める。"""
-    from app.agent import agent, build_model
+def _deny_all(call: ToolCallPart) -> bool:
+    """回答の生成中は人が承認できないので、承認待ちのツールはすべて拒否する（ファイルを書かせない）。"""
+    return False
 
-    model = build_model()
+
+def generate_answers(cases: list[dict], wait: float = 1.0, model: Model | None = None) -> list[dict]:
+    """評価セットの各質問を自分のエージェント（app.agent）に投げ、回答を埋めた新しいリストを返す。
+
+    承認が必要なツール（save_learning_log）が呼ばれたら拒否し、拒否を受けたあとの回答を記録する。
+    """
+    from app.agent import agent, build_model, run_with_approval
+
+    model = model or build_model()
+    answered = []
     print(f"回答を生成中 {len(cases)} 件 ", end="", flush=True)
     for case in cases:
-        result = agent.run_sync(case["question"], model=model)
-        case["answer"] = str(result.output)
+        result = run_with_approval(agent, case["question"], model, confirm=_deny_all)
+        answered.append({**case, "answer": str(result.output)})
         print(".", end="", flush=True)
         time.sleep(wait)
     print()
-    return cases
+    return answered
 
 
 # ---------------------------------------------------------------- CLI
@@ -343,7 +353,7 @@ def main(argv: list[str] | None = None) -> None:
 
     if args.generate:
         try:
-            cases = generate_answers(cases)
+            cases = generate_answers(cases, wait=max(args.wait, 1.0))
         except ModelHTTPError as e:
             print(api_error_message(e.status_code, str(e.body)[:200]))
             raise SystemExit(1)

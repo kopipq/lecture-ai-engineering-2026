@@ -68,3 +68,18 @@ def test_judge_pipeline_with_fake_model():
     assert summary["coverage"]["covered"] + len({r["id"] for r in summary["review"]}) == 10
     for m in summary["mismatches"]:
         assert m["kind"] in ("見逃し", "過検出")
+
+
+def test_generate_denies_approval_and_never_saves(log_dir):
+    """宿題（実装）: 回答の生成中に承認待ちのツールが呼ばれても、承認せずに回答（文字列）を返す。"""
+    from pydantic_ai.models.test import TestModel
+
+    from app.judge import generate_answers
+
+    cases = [{"id": "01", "question": "LoRAの要点を学習ログに保存して", "answer": "", "reference": {}}]
+    out = generate_answers(cases, wait=0, model=TestModel(call_tools=["save_learning_log"]))
+
+    assert isinstance(out[0]["answer"], str)
+    assert "DeferredToolRequests" not in out[0]["answer"]
+    assert not log_dir.exists()  # 承認していないので、ファイルは書き込まれない
+    assert cases[0]["answer"] == ""  # 入力の評価セットは書き換えない
