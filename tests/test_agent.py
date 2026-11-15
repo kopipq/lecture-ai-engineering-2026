@@ -28,9 +28,9 @@ def test_base_tools_are_registered_and_called():
 
     called = {p.tool_name for p in _parts(result, ToolCallPart)}
     assert BASE_TOOLS <= called
-    # 承認待ちのツール（宿題の save_learning_log）は、承認されるまで結果を返さない
-    pending = result.output.approvals if isinstance(result.output, DeferredToolRequests) else []
-    assert len(_parts(result, ToolReturnPart)) == len(_parts(result, ToolCallPart)) - len(pending)
+    # 承認が必要なツール（requires_approval=True）は、実行されずに承認待ちになるので戻り値が無い
+    waiting = len(result.output.approvals) if isinstance(result.output, DeferredToolRequests) else 0
+    assert len(_parts(result, ToolReturnPart)) + waiting == len(_parts(result, ToolCallPart))
     assert result.output
 
 
