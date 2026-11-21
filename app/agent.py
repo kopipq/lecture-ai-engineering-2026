@@ -32,7 +32,7 @@ from pydantic_ai.providers.google import GoogleProvider
 
 from app import tools
 from app.retrieval import run_full_context
-from app.config import MODEL, api_error_message, get_api_key
+from app.config import MODEL, RAG_NEIGHBOR_PAGES, RAG_TOP_K, api_error_message, get_api_key
 
 INSTRUCTIONS = """\
 あなたはAIエンジニアリング講座（AIE2026）の学習支援エージェントです。
@@ -136,6 +136,23 @@ def print_tools(target: Agent) -> None:
         print(f"  引数: {json.dumps(params, ensure_ascii=False)}")
 
 
+def print_material_results(content: str) -> None:
+    """第5回 宿題: search_materials が返したページを、ヒットと前後ページに分けて1行ずつ表示する。"""
+    data = json.loads(content)
+    if data.get("error"):
+        print(f"[tool return] search_materials -> {data['error']}")
+        return
+    results = data["results"]
+    characters = sum(len(r.get("content", "")) for r in results)
+    print(f"[tool return] search_materials -> {len(results)}ページ・本文{characters:,}文字")
+    for r in results:
+        if r.get("role") == "neighbor":
+            label = f"前後（{r['neighbor_of']}）"
+        else:
+            label = f"ヒット 距離{r['distance']:.3f}" if "distance" in r else "ヒット"
+        print(f"    - {r['page_id']} · PDF p.{r['page']} · {label} · {r['title']}")
+
+
 def print_trace(result, elapsed_seconds: float | None = None) -> None:
     """どのツールが、どの引数で呼ばれ、何を返したかを表示する。"""
     print("\n--- trace ---")
@@ -163,6 +180,8 @@ def print_trace(result, elapsed_seconds: float | None = None) -> None:
                                 print(f"      {child['content']}")
                         if not data["children"]:
                             print(f"    （末端ページ・本文{len(node.get('content', ''))}文字を取得）")
+                elif part.tool_name == "search_materials":
+                    print_material_results(part.content)
                 else:
                     print(f"[tool return] {part.tool_name} -> {str(part.content)[:120]}…")
     usage = result.usage
@@ -203,6 +222,8 @@ def main() -> None:
             parser.error("質問を指定してください")
 
         print(f"[model] {MODEL}")
+        if not (args.mcp or args.tree or args.graph or args.full_context):
+            print(f"[retrieval] 検索上位{RAG_TOP_K}件・前後{RAG_NEIGHBOR_PAGES}ページを付与")
         if args.mcp:
             print("[tools] MCP サーバー（app/mcp_servers.json）")
 

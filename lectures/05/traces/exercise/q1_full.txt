@@ -1,0 +1,37 @@
+                 pydantic-ai v2.57.0 • Python 3.13.3
+      / \
+     /   \       agent: agent • model: google:gemini-3.5-flash-lite • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+[model] gemini-3.5-flash-lite
+[full-context] 入力227,971文字
+ご質問ありがとうございます。
+
+LoRAとQLoRAの学習対象および仕組みについては、以下の資料に記載されています。
+
+- **LoRAの仕組み（何を固定し、何を学習するか）**
+  - 資料: lec02-main / 基盤モデルの仕組み
+  - ページ: PDF p.52
+- **QLoRAの追加要素**
+  - 資料: lec02-main / 基盤モデルの仕組み
+  - ページ: PDF p.51 および p.52
+
+具体的な答えをそのまま書くことはできませんが、考え方のヒントとして以下の点を確認してみてください。
+
+1. **LoRAについて**:
+   - モデルの大部分である「元の重み」は動かさずに固定します。
+   - 代わりに、重みの変化分を表す「小さな行列（差分）」だけを追加して学習します。資料の図や説明にある「小さな行列（差分）の記号」や「薄い付箋を書き足すイメージ」を思い出してみましょう。
+
+2. **QLoRAについて**:
+   - LoRAの仕組みに加えて、固定する「元の重み」に対してどのような圧縮処理（データの表現を粗くする処理）を行うでしょうか？ p.51の表やp.52の解説にある「4bit」というキーワードを確認してみてください。
+
+これらの資料の記述を手がかりに整理すると、それぞれの違いが明確になります。
+
+--- trace ---
+[time] 回答完了まで 7.19 秒（検索・埋め込みを含む）
+[usage] 入力 117,025 tokens / 出力 301 tokens / モデル応答 1 回
+[cost] 生成APIの推定コスト: $0.035860 USD（埋め込み・索引構築分は含まない）

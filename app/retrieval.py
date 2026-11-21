@@ -17,7 +17,7 @@ import sqlite_vec
 from app.config import (
     EMBEDDING_DIMENSIONS, EMBEDDING_MAX_TOKENS, EMBEDDING_MODEL,
     RAG_DB, RAG_DOCUMENT_IDS, RAG_SOURCE, RAG_TOP_K, RAG_TREE, get_api_key,
-    RAG_GRAPH, GRAPH_START_K, GRAPH_HOPS, GRAPH_MAX_RESULTS,
+    RAG_GRAPH, GRAPH_START_K, GRAPH_HOPS, GRAPH_MAX_RESULTS, RAG_NEIGHBOR_PAGES,
 )
 
 
@@ -138,6 +138,66 @@ def search(query: str) -> list[dict]:
         return [dict(row) for row in rows]
 
 
+def expand_neighbors(hits: list[dict], pages: list[dict], window: int) -> list[dict]:
+    """検索結果の各ページに、同じ資料の前後window枚のページを付けて返す。
+
+    - 前後ページは同じdocument_idの中だけで探す（章はまたぐが、資料はまたがない）
+    - 同じページは1回だけ返す。検索でヒットしたページは、他のヒットの前後ページにもなる場合も
+      ヒット（role="hit"）として返す
+    - 前後ページにはrole="neighbor"と、どのヒットの前後かを示すneighbor_ofを付ける
+    - 並びは、ヒットの順位ごとに「前のページ→ヒット→次のページ」
+    """
+    if window < 0:
+        raise ValueError("前後に付けるページ数は0以上にしてください。")
+    if window == 0:
+        return hits
+
+    by_document = defaultdict(list)
+    for page in pages:
+        by_document[page["document_id"]].append(page)
+    position = {page["page_id"]: (page["document_id"], i)
+                for document_pages in by_document.values()
+                for i, page in enumerate(document_pages)}
+
+    hit_ids = {hit["page_id"] for hit in hits}
+    seen, results = set(), []
+    for hit in hits:
+        if hit["page_id"] in seen:
+            continue
+        before, after = [], []
+        if hit["page_id"] in position:
+            document_id, i = position[hit["page_id"]]
+            document_pages = by_document[document_id]
+            before = document_pages[max(0, i - window):i]
+            after = document_pages[i + 1:i + 1 + window]
+        for page in before:
+            if page["page_id"] not in hit_ids and page["page_id"] not in seen:
+                results.append({**page, "role": "neighbor", "neighbor_of": hit["page_id"]})
+                seen.add(page["page_id"])
+        results.append({**hit, "role": "hit"})
+        seen.add(hit["page_id"])
+        for page in after:
+            if page["page_id"] not in hit_ids and page["page_id"] not in seen:
+                results.append({**page, "role": "neighbor", "neighbor_of": hit["page_id"]})
+                seen.add(page["page_id"])
+    return results
+
+
+def search_with_neighbors(query: str, window: int | None = None) -> list[dict]:
+    """ベクトル検索の結果に、前後のページの本文と引用情報を付けて返す。
+
+    windowを省略すると、設定のRAG_NEIGHBOR_PAGES（環境変数AIE_RAG_NEIGHBORS）を使う。
+    0なら元の検索結果をそのまま返す。
+    """
+    window = RAG_NEIGHBOR_PAGES if window is None else window
+    if window < 0:  # 埋め込みAPIを呼ぶ前に止める
+        raise ValueError("前後に付けるページ数は0以上にしてください。")
+    hits = search(query)
+    if window == 0:
+        return hits
+    return expand_neighbors(hits, load_pages(RAG_SOURCE), window)
+
+
 def search_graph(query: str) -> dict:
     """ベクトル検索を入口に、前後ページと共通用語で候補を広げる。"""
     pages = {page["page_id"]: page for page in load_pages(RAG_SOURCE)}
@@ -201,9 +261,15 @@ def run_full_context(agent, question: str, model, instructions: str, prompt_temp
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="エージェントを使わず、講義資料の検索だけを実行する")
     parser.add_argument("query", help="調べたい内容")
+    parser.add_argument("--neighbors", type=int, default=None,
+                        help="検索結果の前後に付けるページ数（省略時は環境変数AIE_RAG_NEIGHBORS、既定0）")
     args = parser.parse_args()
-    for i, result in enumerate(search(args.query), 1):
+    for i, result in enumerate(search_with_neighbors(args.query, args.neighbors), 1):
         print(f"\n{'=' * 60}\n検索結果 {i}\n{'=' * 60}")
+        if result.get("role") == "neighbor":
+            print(f"種別: 前後ページ（{result['neighbor_of']} の前後）")
+        elif result.get("role") == "hit":
+            print("種別: 検索ヒット")
         print(f"講義: {result['document_title']}")
         print(f"章: {result['section']}")
         print(f"タイトル: {result['title']}")

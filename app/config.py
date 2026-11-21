@@ -19,6 +19,18 @@ RAG_GRAPH = ROOT / "data/rag_data/graph.json"
 RAG_DB = Path(os.getenv("AIE_RAG_DB", str(ROOT / "data/rag_data/index.sqlite3")))
 RAG_DOCUMENT_IDS = ("lec01-main", "lec02-main", "lec03-main")
 RAG_TOP_K = 5
+
+
+def _neighbor_pages() -> int:
+    """第5回 宿題: 検索結果の前後に付けるページ数。環境変数 AIE_RAG_NEIGHBORS で指定する。"""
+    value = os.getenv("AIE_RAG_NEIGHBORS", "0").strip()
+    if not (value.isascii() and value.isdigit()):
+        raise SystemExit(f"AIE_RAG_NEIGHBORS は0以上の整数で指定してください: {value!r}")
+    return int(value)
+
+
+# 0 なら前後のページを付けない（元の検索と同じ）。例: export AIE_RAG_NEIGHBORS=1
+RAG_NEIGHBOR_PAGES = _neighbor_pages()
 GRAPH_START_K = 3
 GRAPH_HOPS = 2
 GRAPH_MAX_RESULTS = 10
