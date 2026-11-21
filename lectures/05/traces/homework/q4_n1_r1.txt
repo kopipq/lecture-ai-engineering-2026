@@ -1,0 +1,28 @@
+[model] gemini-3.5-flash-lite
+[retrieval] 検索上位5件・前後1ページを付与
+第2回のクイズ4で、Fine-Tuningが一番向いている選択肢とその理由は以下の通りです。
+
+- **答え**：B（回答を、必ず決まった JSON 形式で返させる）
+- **理由**：
+  - Fine-Tuning（FT）は、出力形式・口調・手順といった**「振る舞い」**を直すのに最も向いているためです（第2回・PDF p.57）。
+  - 一方で、AやCのような「新しい知識や事実」の追加にはRAG（検索）が適しており、Dのような「難しい計算問題」の正答率向上には推論時計算やモデル選びが適しています（第2回・PDF p.57）。
+
+（根拠：第2回・PDF p.57）
+
+--- trace ---
+[tool call]   search_materials({'query': '第2回 クイズ4 Fine-Tuning'})
+[tool return] search_materials -> 11ページ・本文5,233文字
+    - lec02-main-p057 · PDF p.57 · ヒット 距離0.165 · クイズ 4 ： Fine-Tuning が一番向いているのは？（答え）
+    - lec02-main-p058 · PDF p.58 · 前後（lec02-main-p057） · Fine-Tuning する前のチェックリスト
+    - lec02-main-p055 · PDF p.55 · 前後（lec02-main-p056） · FT の落とし穴：直したところ以外が、壊れていないか
+    - lec02-main-p056 · PDF p.56 · ヒット 距離0.177 · クイズ 4 ： Fine-Tuning が一番向いているのは？
+    - lec02-main-p025 · PDF p.25 · 前後（lec02-main-p026） · 推論時計算：使うときに「考えさせる」と、難問に強くなる
+    - lec02-main-p026 · PDF p.26 · ヒット 距離0.223 · クイズ 2 ：どこを動かす？
+    - lec02-main-p027 · PDF p.27 · 前後（lec02-main-p026） · クイズ 2 ：どこを動かす？（答え）
+    - lec02-main-p044 · PDF p.44 · 前後（lec02-main-p045） · モデル選びの手順
+    - lec02-main-p045 · PDF p.45 · ヒット 距離0.230 · 選んだモデルを、いつ・どう直すか
+    - lec02-main-p046 · PDF p.46 · ヒット 距離0.232 · 小規模な FT は振る舞いに強く、知識の追加は苦手
+    - lec02-main-p047 · PDF p.47 · 前後（lec02-main-p046） · 根拠と諸説：知識の追加は RAG が効きやすい
+[time] 回答完了まで 8.00 秒（検索・埋め込みを含む）
+[usage] 入力 4,924 tokens / 出力 203 tokens / モデル応答 2 回
+[cost] 生成APIの推定コスト: $0.001985 USD（埋め込み・索引構築分は含まない）

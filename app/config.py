@@ -4,11 +4,40 @@ APIキーやモデル名はコードに書かず、環境変数から読み込�
 """
 
 import os
+from pathlib import Path
 
 # 既定モデル。環境変数 AIE_MODEL を設定すると切り替えられる。
 #   例: export AIE_MODEL=gemini-3.5-flash
 DEFAULT_MODEL = "gemini-3.5-flash-lite"
 MODEL = os.getenv("AIE_MODEL", DEFAULT_MODEL)
+
+# 第5回: 1ページを1チャンクとして検索する。索引はscripts/build_rag_index.pyで作成する。
+ROOT = Path(__file__).resolve().parent.parent
+RAG_SOURCE = ROOT / "data/rag_data/lectures.json"
+RAG_TREE = ROOT / "data/rag_data/tree.json"
+RAG_GRAPH = ROOT / "data/rag_data/graph.json"
+RAG_DB = Path(os.getenv("AIE_RAG_DB", str(ROOT / "data/rag_data/index.sqlite3")))
+RAG_DOCUMENT_IDS = ("lec01-main", "lec02-main", "lec03-main")
+RAG_TOP_K = 5
+
+
+def _neighbor_pages() -> int:
+    """第5回 宿題: 検索結果の前後に付けるページ数。環境変数 AIE_RAG_NEIGHBORS で指定する。"""
+    value = os.getenv("AIE_RAG_NEIGHBORS", "0").strip()
+    if not (value.isascii() and value.isdigit()):
+        raise SystemExit(f"AIE_RAG_NEIGHBORS は0以上の整数で指定してください: {value!r}")
+    return int(value)
+
+
+# 0 なら前後のページを付けない（元の検索と同じ）。例: export AIE_RAG_NEIGHBORS=1
+RAG_NEIGHBOR_PAGES = _neighbor_pages()
+GRAPH_START_K = 3
+GRAPH_HOPS = 2
+GRAPH_MAX_RESULTS = 10
+EMBEDDING_MODEL = "gemini-embedding-001"
+EMBEDDING_DIMENSIONS = 768
+# 2,048トークンの上限に対し、タスク指定等の分を残す。超過時は切り捨てず停止する。
+EMBEDDING_MAX_TOKENS = 2000
 
 
 def api_error_message(status: int, detail: str = "") -> str:

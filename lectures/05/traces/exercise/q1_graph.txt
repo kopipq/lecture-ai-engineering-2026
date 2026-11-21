@@ -1,0 +1,25 @@
+                 pydantic-ai v2.57.0 • Python 3.13.3
+      / \
+     /   \       agent: target • model: google:gemini-3.5-flash-lite • tools: 1 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+[model] gemini-3.5-flash-lite
+第2回の講義資料によると、LoRAとQLoRAの仕組みについて以下の説明があります。
+
+* **LoRAが固定するものと学習するもの**（第2回・PDF p.51, 52）：
+  * **固定するもの**：モデルの元の重み（本体）は固定し、学習しません。
+  * **学習するもの**：変化分を表す細長い2つの小さな行列（低ランクの差分パラメータ）だけを学習します。
+
+* **QLoRAが加えるもの**（第2回・PDF p.51, 52）：
+  * LoRAの手法に加えて、**元の重みを4bit（数値を粗く保存）に圧縮する**という処理を加えます。これにより、さらに少ないメモリで大きなモデルの微調整が可能になります。
+
+--- trace ---
+[tool call]   search_graph({'query': 'LoRA QLoRA 固定 学習'})
+[tool return] search_graph -> {"seeds": [{"page_id": "lec02-main-p052", "document_id": "lec02-main", "lecture": 2, "document_title": "基盤モデルの仕組み", "sec…
+[time] 回答完了まで 4.47 秒（検索・埋め込みを含む）
+[usage] 入力 5,771 tokens / 出力 196 tokens / モデル応答 2 回
+[cost] 生成APIの推定コスト: $0.002221 USD（埋め込み・索引構築分は含まない）
